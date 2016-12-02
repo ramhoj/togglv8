@@ -54,7 +54,7 @@ module TogglV8
       full_resp
     end
 
-    def get(resource, params={})
+    def get(resource, params={}, whole_body = false)
       query_params = params.map { |k,v| "#{k}=#{v}" }.join('&')
       resource += "?#{query_params}" unless query_params.empty?
       resource.gsub!('+', '%2B')
@@ -63,7 +63,7 @@ module TogglV8
       return {} if full_resp == {}
       begin
         resp = Oj.load(full_resp.body)
-        return resp['data'] if resp.respond_to?(:has_key?) && resp.has_key?('data')
+        return resp['data'] if resp.respond_to?(:has_key?) && resp.has_key?('data') && whole_body == false
         return resp
       rescue Oj::ParseError, EncodingError
         return full_resp.body
