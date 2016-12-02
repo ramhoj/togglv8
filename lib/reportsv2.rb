@@ -72,24 +72,34 @@ module TogglV8
     # NB! Maximum date span (until - since) is one year.
 
     # extension can be one of ['.pdf', '.csv', '.xls']. Possibly others?
-    def report(type, extension, params)
+    def report(type, extension, whole_body, params)
       raise "workspace_id is required" if @workspace_id.nil?
       get "#{type}#{extension}", {
-        :'user_agent' => @user_agent,
-        :'workspace_id' => @workspace_id,
-      }.merge(params)
+        'user_agent': @user_agent,
+        'workspace_id': @workspace_id,
+      }.merge(params), whole_body
     end
 
     def weekly(extension='', params={})
-      report('weekly', extension, params)
+      report('weekly', extension, false, params)
     end
 
     def details(extension='', params={})
-      report('details', extension, params)
+        result      = report('details', extension, true, params)
+        total_count = result['total_count'].to_i
+        per_page    = result['per_page'].to_i
+        pages       = total_count/per_page + 1
+
+        data        = result['data']
+        (2..pages).each do |i|
+            params['page'] = i.to_s
+            data += report('details', extension, false, params)
+        end
+        data
     end
 
     def summary(extension='', params={})
-      report('summary', extension, params)
+      report('summary', extension, false, params)
     end
 
     ##
